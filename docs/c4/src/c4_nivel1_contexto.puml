@@ -1,0 +1,22 @@
+@startuml c4n1
+skinparam shadowing false
+title C4 Nivel 1 - Contexto del sistema Biblioteca GG
+
+actor "Lector" as Lector
+actor "Bibliotecario" as Bib
+actor "Administrador" as Admin
+
+rectangle "Biblioteca GG" as Sistema #D8E8D8 {
+}
+
+rectangle "Proveedor de identidad\n(JWT interno)" as IdP #EEEEEE
+rectangle "Catálogo documental\ny bitácora" as Docs #EEEEEE
+rectangle "Grafo de autoría\ny préstamos" as Grafo #EEEEEE
+
+Lector --> Sistema : consulta el catálogo
+Bib --> Sistema : registra libros y préstamos
+Admin --> Sistema : administra usuarios
+Sistema --> IdP : emite y valida tokens
+Sistema --> Docs : publica fichas y actividades
+Sistema --> Grafo : relaciona autores y préstamos
+@enduml

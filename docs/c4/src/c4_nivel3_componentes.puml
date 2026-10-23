@@ -1,0 +1,40 @@
+@startuml c4n3
+skinparam shadowing false
+title C4 Nivel 3 - Componentes del contenedor API
+
+package "API Express" {
+  [authController] as Auth
+  [libroController] as Libros
+  [prestamoController] as Prestamos
+  [middleware JWT] as JWT
+  [errorHandler RFC 9457] as Err
+  [authService] as AuthS
+  [libroService] as LibS
+  [prestamoService] as PreS
+  [PoliticaPrestamo\nStrategy] as St
+  [BusEventos\nObserver] as Obs
+  [CacheAside] as Cache
+  [CircuitBreaker] as CB
+  [Repositorios] as Repo
+  [Gateways\nPG / Mongo / Redis / Neo4j] as Gw
+}
+
+Auth --> AuthS
+Libros --> JWT
+Libros --> LibS
+Prestamos --> JWT
+Prestamos --> PreS
+AuthS --> Repo
+LibS --> Cache
+LibS --> Repo
+PreS --> St
+PreS --> Obs
+PreS --> Repo
+Cache --> Gw
+Obs --> Gw
+Repo --> Gw
+CB --> Gw
+LibS --> Err
+PreS --> Err
+AuthS --> Err
+@enduml

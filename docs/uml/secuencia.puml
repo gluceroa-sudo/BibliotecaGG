@@ -1,0 +1,37 @@
+@startuml secuencia
+skinparam shadowing false
+title Diagrama de secuencia - Registrar préstamo
+
+actor Bibliotecario
+participant "API\n/api/v1/prestamos" as API
+participant "Auth JWT" as Auth
+participant "PrestamoService" as Servicio
+participant "Strategy\nPoliticaPrestamo" as Strategy
+participant "PostgreSQL\n(repositorio)" as PG
+participant "Bus de eventos\n(Observer)" as Bus
+participant "Redis" as Redis
+participant "Neo4j" as Grafo
+
+Bibliotecario -> API : POST préstamo + Bearer
+API -> Auth : verificar token y rol
+Auth --> API : usuario autenticado
+API -> Servicio : crear(usuarioId, libroId, fecha)
+Servicio -> PG : buscar usuario y libro
+PG --> Servicio : usuario disponible y libro Disponible
+Servicio -> Strategy : calcularDevolucion(rol, fecha)
+Strategy --> Servicio : fechaDevolucion y máximo de activos
+Servicio -> PG : contar préstamos activos
+PG --> Servicio : dentro de la política
+Servicio -> PG : insertar préstamo (confirmado)
+Servicio -> Bus : publicar prestamo.registrado
+Bus -> PG : actualizar libro a Prestado
+Bus -> Grafo : vincular Usuario-PRESTO-Libro
+alt Neo4j no disponible
+  Grafo --> Bus : circuito abierto / pendiente
+else grafo disponible
+  Grafo --> Bus : relación creada
+end
+Servicio -> Redis : invalidar claves libro y catálogo
+Servicio --> API : 201 + meta de consistencia eventual
+API --> Bibliotecario : préstamo y política aplicada
+@enduml

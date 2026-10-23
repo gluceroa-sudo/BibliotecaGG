@@ -1,0 +1,574 @@
+openapi: 3.0.3
+info:
+  title: Biblioteca GG — guía de demostración
+  version: 2.0.0
+  description: |
+    Usa la barra verde de arriba y sigue los pasos del 1 al 7.
+    En cada paso pulsa Execute. Si hay un menú de ejemplos, elige el que dice qué código debes ver.
+    Después del login correcto, pulsa "3. Guardar token" para no copiar el token a mano.
+    Los errores salen con title, status, detail e instance.
+  contact:
+    name: Biblioteca GG
+    url: https://github.com/gluceroa-sudo/BibliotecaGG
+servers:
+  - url: http://localhost:3000
+    description: Esta computadora
+tags:
+  - name: 1. Servidor
+    description: Comprueba que la API está viva y que los cuatro almacenes responden.
+  - name: 2. Entrada
+    description: Obtén el token del bibliotecario y muestra un error 401.
+  - name: 3. Catálogo
+    description: Muestra la caché. La primera consulta es miss y la segunda, hecha enseguida, es hit.
+  - name: 4. Registrar libro
+    description: Requiere el token guardado. Muestra 201, luego 409 y 400.
+  - name: 5. Préstamo
+    description: Requiere el token guardado. Muestra la política del estudiante y los errores 409 y 404.
+  - name: 6. Usuarios
+    description: Solo si el profesor pregunta por el alta de usuarios. Entra otra vez con la cuenta de administrador.
+paths:
+  /api/v1/salud:
+    get:
+      tags: ["1. Servidor"]
+      summary: Paso 1. Ver que el servidor y los cuatro almacenes responden
+      description: |
+        Pulsa Execute. Debes ver el código 200 y, en cada almacén, modo memoria-embebida.
+        También deben aparecer usuarios y libros ya cargados.
+      operationId: obtenerSalud
+      responses:
+        "200":
+          description: Componentes de persistencia y conteos
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Salud"
+              example:
+                sistema: Biblioteca GG
+                persistencia:
+                  postgresql:
+                    modo: memoria-embebida
+                    usuarios: 4
+                    libros: 3
+                    prestamos: 0
+  /api/v1/auth/login:
+    post:
+      tags: ["2. Entrada"]
+      summary: Paso 2. Entrar y obtener el token
+      description: |
+        Elige primero "Entrada correcta" y pulsa Execute. Debes ver 200 y un token.
+        Luego pulsa el botón verde "3. Guardar token".
+        Después elige "Contraseña incorrecta" y pulsa Execute. Debes ver 401, con title, status, detail e instance.
+      operationId: login
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LoginRequest"
+            examples:
+              entradaCorrecta:
+                summary: Entrada correcta. Debe responder 200
+                value:
+                  correo: gerardo@bibliotecagg.edu
+                  password: Biblioteca123!
+              contrasenaIncorrecta:
+                summary: Contraseña incorrecta. Debe responder 401
+                value:
+                  correo: gerardo@bibliotecagg.edu
+                  password: incorrecta
+      responses:
+        "200":
+          description: Token emitido
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LoginResponse"
+        "400":
+          $ref: "#/components/responses/Problema"
+        "401":
+          $ref: "#/components/responses/Problema"
+  /api/v1/libros:
+    get:
+      tags: ["3. Catálogo"]
+      summary: Paso 4. Ver el catálogo y la caché
+      description: |
+        Pulsa Execute una vez y busca meta.cache. La primera vez dice miss.
+        Sin cambiar nada, pulsa Execute otra vez. La segunda vez dice hit y la fuente dice redis.
+        El cuadro titulo es opcional. Si escribes Quijote, la lista queda en un solo libro.
+      operationId: listarLibros
+      parameters:
+        - in: query
+          name: titulo
+          schema:
+            type: string
+          description: Filtro parcial por título
+          example: Clean
+        - in: query
+          name: estado
+          schema:
+            type: string
+            enum: [Disponible, Prestado]
+      responses:
+        "200":
+          description: Catálogo
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ListaLibros"
+    post:
+      tags: ["4. Registrar libro"]
+      summary: Paso 6. Registrar un libro
+      description: |
+        Haz antes el paso 3 de la barra, Guardar token. Si responde 401, el token no quedó guardado.
+        Elige "Libro nuevo" y pulsa Execute. Debes ver 201, postgresql confirmado, mongodb replicado y neo4j relacion-autor-creada.
+        Luego elige "ISBN repetido" y pulsa Execute. Debes ver 409.
+        Luego elige "Sin ISBN" y pulsa Execute. Debes ver 400 y el campo isbn.
+      operationId: crearLibro
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LibroInput"
+            examples:
+              libroNuevo:
+                summary: Libro nuevo. Debe responder 201
+                value:
+                  isbn: "9780134685991"
+                  titulo: Effective Java
+                  autor: Joshua Bloch
+                  editorial: Addison-Wesley
+                  anio: 2018
+                  resumen: Recomendaciones para programar en Java.
+                  etiquetas: [java, oficio]
+              isbnRepetido:
+                summary: ISBN que ya existe. Debe responder 409
+                value:
+                  isbn: "9780132350884"
+                  titulo: Clean Code
+                  autor: Robert C. Martin
+              sinIsbn:
+                summary: Falta el ISBN. Debe responder 400
+                value:
+                  titulo: Libro sin identificador
+                  autor: Anonimo
+      responses:
+        "201":
+          description: Libro creado en PostgreSQL y replicado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LibroCreado"
+        "400":
+          $ref: "#/components/responses/Problema"
+        "401":
+          $ref: "#/components/responses/Problema"
+        "403":
+          $ref: "#/components/responses/Problema"
+        "409":
+          $ref: "#/components/responses/Problema"
+  /api/v1/libros/{id}:
+    get:
+      tags: ["3. Catálogo"]
+      summary: Paso 5. Ver el detalle de Clean Code
+      description: |
+        El id 1 ya viene escrito. Pulsa Execute. Debes ver 200, el título Clean Code y el estado Disponible,
+        salvo que ya lo hayas prestado en el paso del préstamo.
+      operationId: obtenerLibro
+      parameters:
+        - $ref: "#/components/parameters/LibroId"
+      responses:
+        "200":
+          description: Detalle
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LibroDetalle"
+        "400":
+          $ref: "#/components/responses/Problema"
+        "404":
+          $ref: "#/components/responses/Problema"
+  /api/v1/prestamos:
+    get:
+      tags: ["5. Préstamo"]
+      summary: Ver los préstamos ya registrados
+      description: Requiere el token guardado. Úsalo después de crear un préstamo para mostrar la lista.
+      operationId: listarPrestamos
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Préstamos
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ListaPrestamos"
+        "401":
+          $ref: "#/components/responses/Problema"
+    post:
+      tags: ["5. Préstamo"]
+      summary: Paso 7. Registrar un préstamo
+      description: |
+        Requiere el token guardado. Elige "Prestar Clean Code a Ana" y pulsa Execute.
+        Debes ver 201, politica Estudiante, dias 7 y fechaDevolucion 2026-10-29.
+        Vuelve al paso 5 y consulta el libro 1: el estado debe ser Prestado.
+        Elige "Libro que no existe" para ver 404. Si repites el préstamo del libro 1, verás 409.
+      operationId: crearPrestamo
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PrestamoInput"
+            examples:
+              prestarAAna:
+                summary: Prestar Clean Code a Ana. Debe responder 201
+                value:
+                  usuarioId: 3
+                  libroId: 1
+                  fechaPrestamo: "2026-10-22T00:00:00.000Z"
+              libroInexistente:
+                summary: Libro que no existe. Debe responder 404
+                value:
+                  usuarioId: 3
+                  libroId: 999
+                  fechaPrestamo: "2026-10-22T00:00:00.000Z"
+      responses:
+        "201":
+          description: Préstamo registrado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PrestamoCreado"
+        "400":
+          $ref: "#/components/responses/Problema"
+        "401":
+          $ref: "#/components/responses/Problema"
+        "404":
+          $ref: "#/components/responses/Problema"
+        "409":
+          $ref: "#/components/responses/Problema"
+  /api/v1/usuarios:
+    get:
+      tags: ["6. Usuarios"]
+      summary: Ver usuarios, sin contraseñas
+      description: |
+        Entra de nuevo con giovanni@bibliotecagg.edu y Admin123!, guarda ese token y luego pulsa Execute.
+        Ningún usuario debe traer el campo password.
+      operationId: listarUsuarios
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Usuarios sin contraseña
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  datos:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/Usuario"
+                  meta:
+                    $ref: "#/components/schemas/Meta"
+        "401":
+          $ref: "#/components/responses/Problema"
+    post:
+      tags: ["6. Usuarios"]
+      summary: Registrar un usuario nuevo
+      description: |
+        Solo funciona con el token del administrador. El ejemplo crea a María.
+        Si repites el mismo correo, la respuesta es 409.
+      operationId: crearUsuario
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UsuarioInput"
+            example:
+              nombre: Maria Lectora
+              correo: maria@bibliotecagg.edu
+              password: Lectora123!
+              rol: Estudiante
+      responses:
+        "201":
+          description: Usuario creado
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  datos:
+                    $ref: "#/components/schemas/Usuario"
+                  meta:
+                    $ref: "#/components/schemas/Meta"
+        "400":
+          $ref: "#/components/responses/Problema"
+        "401":
+          $ref: "#/components/responses/Problema"
+        "409":
+          $ref: "#/components/responses/Problema"
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  parameters:
+    LibroId:
+      name: id
+      in: path
+      required: true
+      schema:
+        type: integer
+        minimum: 1
+      example: 1
+  responses:
+    Problema:
+      description: Error RFC 9457
+      content:
+        application/problem+json:
+          schema:
+            $ref: "#/components/schemas/Problema"
+          example:
+            type: https://bibliotecagg.local/problems/conflicto
+            title: Conflicto de negocio
+            status: 409
+            detail: Ya existe un libro con el ISBN 9780132350884.
+            instance: /api/v1/libros
+  schemas:
+    Problema:
+      type: object
+      required: [type, title, status, detail]
+      properties:
+        type:
+          type: string
+          format: uri
+        title:
+          type: string
+        status:
+          type: integer
+        detail:
+          type: string
+        instance:
+          type: string
+        errors:
+          type: array
+          items:
+            type: object
+            properties:
+              campo:
+                type: string
+              mensaje:
+                type: string
+    Meta:
+      type: object
+      properties:
+        fuente:
+          type: string
+        cache:
+          type: string
+          enum: [hit, miss]
+        ttlSegundos:
+          type: integer
+        total:
+          type: integer
+        consistencia:
+          type: string
+    LoginRequest:
+      type: object
+      required: [correo, password]
+      properties:
+        correo:
+          type: string
+          format: email
+        password:
+          type: string
+          minLength: 8
+    Usuario:
+      type: object
+      properties:
+        id:
+          type: integer
+        nombre:
+          type: string
+        correo:
+          type: string
+          format: email
+        rol:
+          type: string
+          enum: [Administrador, Bibliotecario, Docente, Estudiante]
+    UsuarioInput:
+      type: object
+      required: [nombre, correo, password]
+      properties:
+        nombre:
+          type: string
+        correo:
+          type: string
+          format: email
+        password:
+          type: string
+        rol:
+          type: string
+    LoginResponse:
+      type: object
+      properties:
+        datos:
+          type: object
+          properties:
+            token:
+              type: string
+            tipo:
+              type: string
+              example: Bearer
+            expiraEn:
+              type: string
+            usuario:
+              $ref: "#/components/schemas/Usuario"
+        meta:
+          $ref: "#/components/schemas/Meta"
+    Libro:
+      type: object
+      properties:
+        id:
+          type: integer
+        isbn:
+          type: string
+        titulo:
+          type: string
+        autor:
+          type: string
+        editorial:
+          type: string
+          nullable: true
+        anio:
+          type: integer
+          nullable: true
+        estado:
+          type: string
+        resumen:
+          type: string
+          nullable: true
+        etiquetas:
+          type: array
+          items:
+            type: string
+    LibroInput:
+      type: object
+      required: [isbn, titulo, autor]
+      properties:
+        isbn:
+          type: string
+        titulo:
+          type: string
+        autor:
+          type: string
+        editorial:
+          type: string
+        anio:
+          type: integer
+        resumen:
+          type: string
+        etiquetas:
+          type: array
+          items:
+            type: string
+    ListaLibros:
+      type: object
+      properties:
+        datos:
+          type: array
+          items:
+            $ref: "#/components/schemas/Libro"
+        meta:
+          $ref: "#/components/schemas/Meta"
+    LibroDetalle:
+      type: object
+      properties:
+        datos:
+          $ref: "#/components/schemas/Libro"
+        meta:
+          $ref: "#/components/schemas/Meta"
+    LibroCreado:
+      allOf:
+        - $ref: "#/components/schemas/LibroDetalle"
+        - type: object
+          properties:
+            meta:
+              type: object
+              properties:
+                postgresql:
+                  type: string
+                mongodb:
+                  type: string
+                neo4j:
+                  type: string
+                consistencia:
+                  type: string
+    PrestamoInput:
+      type: object
+      required: [usuarioId, libroId]
+      properties:
+        usuarioId:
+          type: integer
+        libroId:
+          type: integer
+        fechaPrestamo:
+          type: string
+          format: date-time
+    Prestamo:
+      type: object
+      properties:
+        id:
+          type: integer
+        usuarioId:
+          type: integer
+        libroId:
+          type: integer
+        fechaPrestamo:
+          type: string
+          format: date-time
+        fechaDevolucion:
+          type: string
+          format: date-time
+        estado:
+          type: string
+    ListaPrestamos:
+      type: object
+      properties:
+        datos:
+          type: array
+          items:
+            $ref: "#/components/schemas/Prestamo"
+        meta:
+          $ref: "#/components/schemas/Meta"
+    PrestamoCreado:
+      type: object
+      properties:
+        datos:
+          $ref: "#/components/schemas/Prestamo"
+        meta:
+          type: object
+          properties:
+            politica:
+              type: string
+            dias:
+              type: integer
+            consistencia:
+              type: string
+    Salud:
+      type: object
+      properties:
+        sistema:
+          type: string
+        persistencia:
+          type: object

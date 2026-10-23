@@ -1,0 +1,33 @@
+@startuml actividades
+skinparam shadowing false
+title Diagrama de actividades con calles - Consultar catálogo
+
+|Lector|
+start
+:Solicitar el catálogo\n(título o estado opcional);
+
+|API Biblioteca GG|
+:Validar parámetros de consulta;
+:Construir clave de caché;
+
+|Redis|
+:Buscar la clave con TTL;
+if (¿Hay acierto vigente?) then (sí)
+  :Devolver el catálogo cacheado;
+  |Lector|
+  :Ver resultados;
+  stop
+else (no)
+  |PostgreSQL|
+  :Consultar libros\n(fuente de verdad);
+  |MongoDB|
+  :Enriquecer con resumen y etiquetas;
+  |Redis|
+  :Guardar el resultado\n(TTL 60 segundos);
+  |API Biblioteca GG|
+  :Responder cache = miss;
+  |Lector|
+  :Ver resultados;
+  stop
+endif
+@enduml

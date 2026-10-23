@@ -1,0 +1,63 @@
+@startuml c4n4
+skinparam shadowing false
+skinparam classAttributeIconSize 0
+title C4 Nivel 4 - Código de los componentes críticos
+
+interface LibroRepository {
+  buscar(filtro)
+  buscarPorId(id)
+  buscarPorIsbn(isbn)
+  crear(datos)
+  actualizar(id, cambios)
+}
+
+class PostgresGateway {
+  memoria | Sequelize
+  buscarLibros()
+  crearLibro()
+  actualizarLibro()
+}
+
+class LibroService {
+  listar()
+  obtenerPorId()
+  crear()
+}
+
+class CacheAside {
+  cacheAside(clave, ttl, cargar)
+}
+
+class RedisGateway {
+  obtener(clave)
+  guardar(clave, valor, ttl)
+  eliminarPorPrefijo(prefijo)
+}
+
+class PrestamoService {
+  crear()
+  listar()
+}
+
+class PoliticaPrestamo {
+  calcularDevolucion(rol, fecha)
+}
+
+class CircuitBreaker {
+  estado
+  ejecutar(operacion, alternativa)
+}
+
+class Neo4jGateway {
+  relacionarAutor(libro)
+  vincularPrestamo(datos)
+}
+
+LibroService --> LibroRepository
+LibroRepository <|.. PostgresGateway
+LibroService --> CacheAside
+CacheAside --> RedisGateway
+PrestamoService --> PoliticaPrestamo
+PrestamoService --> CircuitBreaker
+CircuitBreaker --> Neo4jGateway
+@enduml

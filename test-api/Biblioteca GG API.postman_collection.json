@@ -1,0 +1,149 @@
+{
+  "info": {
+    "_postman_id": "b0b7d9b2-2961-4d63-8c9c-56c15bd59433",
+    "name": "Biblioteca GG API",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "57950827",
+    "_collection_link": "https://go.postman.co/collection/57950827-b0b7d9b2-2961-4d63-8c9c-56c15bd59433?source=collection_link"
+  },
+  "item": [
+    {
+      "name": "Obtener Libros",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:3000/api/libros",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "3000",
+          "path": [
+            "api",
+            "libros"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Crear Libro",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n    \"isbn\": \"9781234567890\",\r\n    \"titulo\": \"Clean Code\",\r\n    \"autor\": \"Robert C. Martin\",\r\n    \"editorial\": \"Prentice Hall\",\r\n    \"anio\": 2008\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "http://localhost:3000/api/libros",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "3000",
+          "path": [
+            "api",
+            "libros"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Crear Usuario",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:3000/api/usuarios",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "3000",
+          "path": [
+            "api",
+            "usuarios"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Obtener Usuarios",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:3000/api/usuarios",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "3000",
+          "path": [
+            "api",
+            "usuarios"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Crear Prestamo",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n    \"usuarioId\":1,\r\n    \"libroId\":1,\r\n    \"fechaPrestamo\":\"2026-09-11\",\r\n    \"estado\":\"Activo\"\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "http://localhost:3000/api/prestamos",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "3000",
+          "path": [
+            "api",
+            "prestamos"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Obtener Prestamos",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:3000/api/prestamos",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "3000",
+          "path": [
+            "api",
+            "prestamos"
+          ]
+        }
+      },
+      "response": []
+    }
+  ]
+}

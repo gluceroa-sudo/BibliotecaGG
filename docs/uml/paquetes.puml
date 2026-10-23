@@ -1,0 +1,38 @@
+@startuml paquetes
+skinparam shadowing false
+title Diagrama de paquetes - modularización de Biblioteca GG
+
+package "interfaz" {
+  [routes]
+  [controllers]
+  [middlewares]
+}
+
+package "aplicacion" {
+  [authService]
+  [libroService]
+  [prestamoService]
+  [observadores]
+}
+
+package "dominio" {
+  [problemas RFC 9457]
+  [strategy PoliticaPrestamo]
+  [observer BusEventos]
+  [circuitBreaker]
+}
+
+package "infraestructura" {
+  [repositorios]
+  [postgresGateway]
+  [mongoGateway]
+  [redisGateway]
+  [neo4jGateway]
+  [config]
+}
+
+interfaz --> aplicacion
+aplicacion --> dominio
+aplicacion --> infraestructura
+infraestructura --> dominio
+@enduml

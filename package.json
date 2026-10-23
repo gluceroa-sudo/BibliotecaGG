@@ -1,0 +1,34 @@
+{
+  "name": "bibliotecagg",
+  "version": "2.0.0",
+  "description": "Sistema de gestión de biblioteca. Entrega final de Análisis de Sistemas II.",
+  "main": "src/app.js",
+  "scripts": {
+    "start": "node src/app.js",
+    "dev": "nodemon src/app.js",
+    "test": "node --test"
+  },
+  "keywords": ["biblioteca", "api", "openapi"],
+  "author": "Giovanni Francia y Gerardo Lucero",
+  "license": "ISC",
+  "type": "commonjs",
+  "dependencies": {
+    "bcryptjs": "^2.4.3",
+    "cors": "^2.8.6",
+    "dotenv": "^17.4.2",
+    "express": "^5.2.1",
+    "js-yaml": "^4.1.0",
+    "jsonwebtoken": "^9.0.2",
+    "mongodb": "^6.20.0",
+    "neo4j-driver": "^5.28.2",
+    "redis": "^5.8.2",
+    "pg": "^8.23.0",
+    "pg-hstore": "^2.3.4",
+    "sequelize": "^6.37.8",
+    "swagger-ui-express": "^5.0.1"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.14",
+    "supertest": "^7.1.4"
+  }
+}

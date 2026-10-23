@@ -1,0 +1,22 @@
+@startuml c4n2
+skinparam shadowing false
+title C4 Nivel 2 - Contenedores
+
+actor "Personal de biblioteca" as Persona
+
+rectangle "Biblioteca GG" {
+  rectangle "Aplicación API\nNode.js + Express\n/api/v1" as API #D8E8D8
+  rectangle "Documentación OpenAPI\nSwagger UI /api/docs" as Docs #F4F4D8
+  database "PostgreSQL\nfuente de verdad" as PG #D8E4F4
+  database "MongoDB\ncatálogo y actividades" as MG #F4E4D8
+  database "Redis\ncaché Cache-Aside" as RD #F8D8D8
+  database "Neo4j\ngrafo" as N4 #E4D8F4
+}
+
+Persona --> API : HTTPS JSON
+Persona --> Docs : consulta el contrato
+API --> PG : usuarios, libros, préstamos
+API --> MG : resumen, etiquetas, bitácora
+API --> RD : lectura y TTL
+API --> N4 : ESCRITO_POR y PRESTO
+@enduml

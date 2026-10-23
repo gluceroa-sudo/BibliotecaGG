@@ -1,0 +1,70 @@
+@startuml clases
+skinparam shadowing false
+skinparam classAttributeIconSize 0
+title Diagrama de clases de análisis y diseño - Biblioteca GG
+
+class Usuario {
+  id : Integer
+  nombre : String
+  correo : String
+  password : String
+  rol : Rol
+  autenticar()
+}
+
+class Libro {
+  id : Integer
+  isbn : String
+  titulo : String
+  autor : String
+  editorial : String
+  anio : Integer
+  estado : EstadoLibro
+}
+
+class Prestamo {
+  id : Integer
+  fechaPrestamo : DateTime
+  fechaDevolucion : DateTime
+  estado : EstadoPrestamo
+  registrar()
+}
+
+class PoliticaPrestamo <<strategy>> {
+  dias : Integer
+  maxActivos : Integer
+  calcularDevolucion(fecha)
+}
+
+class DocumentoCatalogo {
+  libroId : Integer
+  resumen : String
+  etiquetas : String[]
+}
+
+class RelacionGrafo {
+  tipo : String
+  desde : String
+  hacia : String
+}
+
+class Catalogo {
+  consultar(filtro)
+  registrar(libro)
+}
+
+Usuario "1" --> "0..*" Prestamo : solicita >
+Libro "1" --> "0..*" Prestamo : incluye >
+Prestamo *-- "1" PoliticaPrestamo : se calcula con >
+Catalogo o-- "0..*" Libro : agrega >
+Libro "1" -- "0..1" DocumentoCatalogo : se describe en >
+Libro "1" --> "0..*" RelacionGrafo : participa >
+Usuario "1" --> "0..*" RelacionGrafo : participa >
+
+note right of PoliticaPrestamo
+  Estudiante: 7 días, máximo 2
+  Docente: 21 días, máximo 5
+  Bibliotecario: 14 días, máximo 4
+  Administrador: 30 días, máximo 10
+end note
+@enduml
